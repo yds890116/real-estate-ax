@@ -53,6 +53,14 @@ class Settings(BaseSettings):
     ONBID_STATS_SCHEDULE_HOUR: int = 4
     ONBID_STATS_SCHEDULE_MINUTE: int = 0
 
+    # 한국부동산원 R-ONE 부동산통계정보 Open API (https://www.reb.or.kr/r-one)
+    RONE_API_KEY: str = ""
+
+    # 지역별 공동주택 실거래가격지수/매매·전세가격지수는 월 단위 집계 통계라 매월 1회만 수집한다.
+    RONE_SCHEDULE_DAY: int = 1
+    RONE_SCHEDULE_HOUR: int = 5
+    RONE_SCHEDULE_MINUTE: int = 0
+
     class Config:
         env_file = ".env"
 

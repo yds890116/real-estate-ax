@@ -5,6 +5,7 @@ BackgroundScheduler를 사용한다: FastAPI가 동기 워커(uvicorn 기본)로
 
 - daily_data_collection: 온비드 공매물건·네이버 뉴스 (매일)
 - weekly_onbid_regional_stats: 온비드 지역별 입찰 통계 (월 단위 집계라 갱신이 느려 주 1회면 충분)
+- monthly_rone_price_index: 한국부동산원 R-ONE 지역별 주택가격지수 (월 단위 집계라 월 1회면 충분)
 """
 
 import logging
@@ -45,6 +46,21 @@ def _run_weekly_regional_stats_job() -> None:
         db.close()
 
 
+def _run_monthly_rone_price_index_job() -> None:
+    from app.db.session import SessionLocal
+    from app.services.rone_index_service import collect_regional_price_indices
+
+    logger.info("R-ONE 지역별 주택가격지수 월간 배치 시작")
+    db = SessionLocal()
+    try:
+        result = collect_regional_price_indices(db)
+        logger.info("R-ONE 지역별 주택가격지수 월간 배치 완료: %s", result)
+    except Exception:
+        logger.exception("R-ONE 지역별 주택가격지수 월간 배치 실행 중 예외 발생")
+    finally:
+        db.close()
+
+
 def start_scheduler() -> None:
     if scheduler.running:
         return
@@ -66,14 +82,27 @@ def start_scheduler() -> None:
         id="weekly_onbid_regional_stats",
         replace_existing=True,
     )
+    scheduler.add_job(
+        _run_monthly_rone_price_index_job,
+        trigger="cron",
+        day=settings.RONE_SCHEDULE_DAY,
+        hour=settings.RONE_SCHEDULE_HOUR,
+        minute=settings.RONE_SCHEDULE_MINUTE,
+        id="monthly_rone_price_index",
+        replace_existing=True,
+    )
     scheduler.start()
     logger.info(
-        "데이터 수집 배치 스케줄 등록 완료: 일일 %02d:%02d / 지역별 입찰통계 매주 %d요일 %02d:%02d (Asia/Seoul)",
+        "데이터 수집 배치 스케줄 등록 완료: 일일 %02d:%02d / 지역별 입찰통계 매주 %d요일 %02d:%02d / "
+        "R-ONE 지역별 주택가격지수 매월 %d일 %02d:%02d (Asia/Seoul)",
         settings.BATCH_SCHEDULE_HOUR,
         settings.BATCH_SCHEDULE_MINUTE,
         settings.ONBID_STATS_SCHEDULE_DAY_OF_WEEK,
         settings.ONBID_STATS_SCHEDULE_HOUR,
         settings.ONBID_STATS_SCHEDULE_MINUTE,
+        settings.RONE_SCHEDULE_DAY,
+        settings.RONE_SCHEDULE_HOUR,
+        settings.RONE_SCHEDULE_MINUTE,
     )
 
 

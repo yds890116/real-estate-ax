@@ -7,5 +7,9 @@ from app.models.onbid_auction_item import OnbidAuctionItem  # noqa: F401
 from app.models.opinion import ReviewOpinion  # noqa: F401
 from app.models.property import Property  # noqa: F401
 from app.models.regional_bid_stat import RegionalBidStat  # noqa: F401
+from app.models.regional_price_index import RegionalPriceIndex  # noqa: F401
 from app.models.registry_analysis import RegistryAnalysis  # noqa: F401
 from app.models.rent_transaction import RentTransaction  # noqa: F401
+from app.models.rtech_complex import RtechComplex  # noqa: F401
+from app.models.rtech_price_quote import RtechPriceQuote  # noqa: F401
+from app.models.rtech_real_transaction import RtechRealTransaction  # noqa: F401
