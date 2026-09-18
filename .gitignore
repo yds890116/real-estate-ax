@@ -1,0 +1,39 @@
+# 환경변수 / 민감정보
+.env
+.env.*
+!.env.example
+
+# Python (backend)
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+backend/app/ml/artifacts/
+
+# Node (frontend)
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# 데이터베이스 / 데이터 산출물
+*.db
+*.sqlite
+*.sqlite3
+
+# 로그
+*.log
+logs/
+
+# 에디터
+.vscode/*
+!.vscode/settings.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

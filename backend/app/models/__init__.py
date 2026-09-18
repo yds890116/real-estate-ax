@@ -1,0 +1,11 @@
+from app.models.appraisal_case import AppraisalCase  # noqa: F401
+from app.models.batch_run_log import BatchRunLog  # noqa: F401
+from app.models.market_transaction import MarketTransaction  # noqa: F401
+from app.models.naver_listing import NaverListing  # noqa: F401
+from app.models.news_article import NewsArticle  # noqa: F401
+from app.models.onbid_auction_item import OnbidAuctionItem  # noqa: F401
+from app.models.opinion import ReviewOpinion  # noqa: F401
+from app.models.property import Property  # noqa: F401
+from app.models.regional_bid_stat import RegionalBidStat  # noqa: F401
+from app.models.registry_analysis import RegistryAnalysis  # noqa: F401
+from app.models.rent_transaction import RentTransaction  # noqa: F401

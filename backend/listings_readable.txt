@@ -1,0 +1,63 @@
+{
+  "complex_name": "래미안대치팰리스",
+  "reference_area": 93.18,
+  "listings": [
+    {
+      "id": "sample-래미안대치팰리스-2",
+      "complex_name": "래미안대치팰리스",
+      "exclusive_area": 92.71,
+      "floor": "3층",
+      "trade_type": "월세",
+      "price": 99658,
+      "monthly_rent": 1594,
+      "realtor": "한강뷰공인중개사",
+      "source": "sample"
+    },
+    {
+      "id": "sample-래미안대치팰리스-4",
+      "complex_name": "래미안대치팰리스",
+      "exclusive_area": 92.9,
+      "floor": "6층",
+      "trade_type": "전세",
+      "price": 356452,
+      "monthly_rent": null,
+      "realtor": "대치공인중개사",
+      "source": "sample"
+    },
+    {
+      "id": "sample-래미안대치팰리스-1",
+      "complex_name": "래미안대치팰리스",
+      "exclusive_area": 93.08,
+      "floor": "8층",
+      "trade_type": "매매",
+      "price": 437848,
+      "monthly_rent": null,
+      "realtor": "대치공인중개사",
+      "source": "sample"
+    },
+    {
+      "id": "sample-래미안대치팰리스-5",
+      "complex_name": "래미안대치팰리스",
+      "exclusive_area": 93.46,
+      "floor": "23층",
+      "trade_type": "월세",
+      "price": 113504,
+      "monthly_rent": 1251,
+      "realtor": "래미안부동산",
+      "source": "sample"
+    },
+    {
+      "id": "sample-래미안대치팰리스-3",
+      "complex_name": "래미안대치팰리스",
+      "exclusive_area": 93.55,
+      "floor": "22층",
+      "trade_type": "월세",
+      "price": 96774,
+      "monthly_rent": 1520,
+      "realtor": "래미안부동산",
+      "source": "sample"
+    }
+  ],
+  "is_sample_data": true,
+  "notice": "네이버 부동산은 공식 오픈API가 없고 실시간 스크래핑도 접근이 차단되어 현재는 참고용 샘플 매물입니다. 실제 매물 정보는 네이버 부동산에서 직접 확인해주세요."
+}

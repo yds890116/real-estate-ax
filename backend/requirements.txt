@@ -1,0 +1,24 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sqlalchemy>=2.0
+pydantic>=2.9
+pydantic-settings>=2.5
+pandas>=2.2
+requests>=2.32
+
+# 기능1 리스크/시세 모델 고도화 시 사용 (현재는 규칙 기반 휴리스틱으로 대체)
+scikit-learn>=1.5
+xgboost>=2.1
+
+# 기능2 등기부등본 권리분석
+python-multipart>=0.0.9
+pypdf>=4.3
+pytesseract>=0.3.10
+Pillow>=10.4
+anthropic>=0.40
+
+# 네이버 부동산 매물 스크래핑 (헤드리스 브라우저)
+playwright>=1.48
+
+# 일일 데이터 수집 배치 스케줄링 (온비드 공매/네이버 뉴스)
+apscheduler>=3.10
