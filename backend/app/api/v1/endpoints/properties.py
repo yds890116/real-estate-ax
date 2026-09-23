@@ -10,12 +10,16 @@ from app.schemas.property import PropertyCreate, PropertyResponse
 from app.schemas.opinion import OpinionUpdateRequest, ReviewOpinionResult
 from app.schemas.registry import RegistryAnalysisResult
 from app.services.appraisal_search import search_similar_cases
+from app.services.cost_income_valuation import estimate_cost_income
 from app.services.listing_comparison import compare_to_market
 from app.services.listing_service import get_cached_or_sample_listings
 from app.services.opinion_service import OpinionNotFoundError, generate_opinion, get_opinion, update_opinion
 from app.services.registry_parser import compute_mortgage_total
 from app.services.risk_engine import risk_engine
+from app.services.rone_index_service import get_region_trend_features
 from app.services.valuation_engine import valuation_engine
+
+COMPARABLE_SALE_TYPES = {"아파트", "빌라", "연립다세대"}
 
 router = APIRouter()
 
@@ -94,6 +98,9 @@ def get_property_analysis(property_id: int, db: Session = Depends(get_db)):
             len(appraisal.cases),
         )
 
+    regional_trend = get_region_trend_features(db, prop.sido, prop.sigungu)
+    cost_income_estimate = None if prop.property_type in COMPARABLE_SALE_TYPES else estimate_cost_income(prop)
+
     return PropertyAnalysis(
         property=PropertyResponse.model_validate(db_property),
         valuation=valuation,
@@ -101,6 +108,8 @@ def get_property_analysis(property_id: int, db: Session = Depends(get_db)):
         registry=registry,
         appraisal=appraisal,
         listings=listings,
+        regional_trend=regional_trend,
+        cost_income_estimate=cost_income_estimate,
         listing_comparison=listing_comparison,
     )
 

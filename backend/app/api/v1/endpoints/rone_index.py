@@ -3,16 +3,17 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.rone_index import RegionTrendFeatures, RoneTableIngestResult
-from app.services.rone_index_service import collect_regional_price_indices, get_region_trend_features
+from app.services.rone_index_service import collect_regional_indicators, collect_regional_price_indices, get_region_trend_features
 
 router = APIRouter()
 
 
 @router.post("/run", response_model=list[RoneTableIngestResult])
 def run_collection_now(months_back: int = 6, db: Session = Depends(get_db)):
-    """R-ONE 지역별 공동주택 실거래가격지수·매매/전세가격지수 수집을 즉시 1회 실행한다 (테스트/데모용)."""
+    """R-ONE 지역별 공동주택 실거래가격지수·매매/전세가격지수·지가변동률·임대동향지수 수집을 즉시 1회 실행한다 (테스트/데모용)."""
 
     results = collect_regional_price_indices(db, months_back=months_back)
+    results += collect_regional_indicators(db)
     return [RoneTableIngestResult(**r) for r in results]
 
 

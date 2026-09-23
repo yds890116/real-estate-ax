@@ -1,5 +1,14 @@
 import type {
+  AutocompleteSuggestion,
+  CollateralScoreModelInfo,
+  CollateralScoreTrainResult,
+  CollectionRunResult,
+  CourtAuctionDailyCollectionSummary,
+  CourtAuctionDailyItemsResponse,
+  DailyCollectionSummary,
+  DailyItemsResponse,
   DashboardItem,
+  HogangnonoComplexResult,
   ListingScrapeResponse,
   MarketSearchResult,
   MarketTransaction,
@@ -137,6 +146,49 @@ export function getRegionalStatsSummary(sido: string, sigungu?: string | null): 
   const search = new URLSearchParams({ sido })
   if (sigungu) search.set('sigungu', sigungu)
   return request<RegionalBidStatSummary>(`/onbid-stats/summary?${search.toString()}`)
+}
+
+export function autocompleteSearch(query: string): Promise<AutocompleteSuggestion[]> {
+  const search = new URLSearchParams({ query })
+  return request<AutocompleteSuggestion[]>(`/search/autocomplete?${search.toString()}`)
+}
+
+export function getHogangnonoPrice(query: string, complexName?: string | null): Promise<HogangnonoComplexResult> {
+  const search = new URLSearchParams({ query })
+  if (complexName) search.set('complex_name', complexName)
+  return request<HogangnonoComplexResult>(`/hogangnono/price?${search.toString()}`)
+}
+
+export function listOnbidCollectionDates(days = 30): Promise<DailyCollectionSummary[]> {
+  const search = new URLSearchParams({ days: String(days) })
+  return request<DailyCollectionSummary[]>(`/onbid-monitor/collection-dates?${search.toString()}`)
+}
+
+export function getOnbidDailyItems(targetDate?: string): Promise<DailyItemsResponse> {
+  const search = targetDate ? `?${new URLSearchParams({ target_date: targetDate }).toString()}` : ''
+  return request<DailyItemsResponse>(`/onbid-monitor/daily-items${search}`)
+}
+
+export function getCollateralScoreModelInfo(): Promise<CollateralScoreModelInfo> {
+  return request<CollateralScoreModelInfo>('/collateral-score/model-info')
+}
+
+export function trainCollateralScoreModel(): Promise<CollateralScoreTrainResult> {
+  return request<CollateralScoreTrainResult>('/collateral-score/train', { method: 'POST' })
+}
+
+export function listCourtAuctionCollectionDates(days = 30): Promise<CourtAuctionDailyCollectionSummary[]> {
+  const search = new URLSearchParams({ days: String(days) })
+  return request<CourtAuctionDailyCollectionSummary[]>(`/court-auction-monitor/collection-dates?${search.toString()}`)
+}
+
+export function getCourtAuctionDailyItems(targetDate?: string): Promise<CourtAuctionDailyItemsResponse> {
+  const search = targetDate ? `?${new URLSearchParams({ target_date: targetDate }).toString()}` : ''
+  return request<CourtAuctionDailyItemsResponse>(`/court-auction-monitor/daily-items${search}`)
+}
+
+export function collectCourtAuctionNow(): Promise<CollectionRunResult> {
+  return request<CollectionRunResult>('/court-auction-monitor/collect', { method: 'POST' })
 }
 
 export { ApiError }

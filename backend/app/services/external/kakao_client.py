@@ -89,6 +89,75 @@ def _search_address(query: str) -> dict | None:
     return documents[0] if documents else None
 
 
+@dataclasses.dataclass
+class AutocompleteSuggestion:
+    place_name: str  # 장소명(단지명 등) - 주소검색 결과면 지번주소를 그대로 씀
+    address_name: str  # 지번주소
+    road_address_name: str | None
+    x: str
+    y: str
+    category_group_name: str | None
+
+
+def search_autocomplete(query: str, size: int = 5) -> list[AutocompleteSuggestion]:
+    """입력창 자동완성용 - 주소검색과 키워드(장소)검색 결과를 합쳐 상위 size개를 반환한다.
+
+    카카오 로컬 API에는 전용 자동완성 엔드포인트가 없어(주소/키워드 검색만 제공), 두 검색을
+    합쳐 자동완성처럼 보이게 구성한다. 주소검색 결과를 먼저 보여주고(정확도가 높음), 키워드
+    검색 결과로 나머지 자리를 채운다(단지명 등 도로명/지번에 없는 입력 대응).
+    """
+
+    suggestions: list[AutocompleteSuggestion] = []
+    seen: set[str] = set()
+
+    try:
+        addr_data = _get("/search/address.json", {"query": query, "size": min(size, 10)})
+        for doc in addr_data.get("documents") or []:
+            addr = doc["address"]
+            road = doc.get("road_address") or {}
+            key = addr.get("address_name", "")
+            if key in seen:
+                continue
+            seen.add(key)
+            suggestions.append(
+                AutocompleteSuggestion(
+                    place_name=road.get("building_name") or addr.get("address_name", ""),
+                    address_name=addr.get("address_name", ""),
+                    road_address_name=road.get("address_name") or None,
+                    x=addr.get("x", ""),
+                    y=addr.get("y", ""),
+                    category_group_name=None,
+                )
+            )
+    except KakaoApiError:
+        pass
+
+    if len(suggestions) < size:
+        try:
+            kw_data = _get("/search/keyword.json", {"query": query, "size": min(size, 15)})
+            for doc in kw_data.get("documents") or []:
+                if len(suggestions) >= size:
+                    break
+                key = doc.get("address_name", "") or doc.get("place_name", "")
+                if key in seen:
+                    continue
+                seen.add(key)
+                suggestions.append(
+                    AutocompleteSuggestion(
+                        place_name=doc.get("place_name", ""),
+                        address_name=doc.get("address_name", ""),
+                        road_address_name=doc.get("road_address_name") or None,
+                        x=doc.get("x", ""),
+                        y=doc.get("y", ""),
+                        category_group_name=doc.get("category_group_name") or None,
+                    )
+                )
+        except KakaoApiError:
+            pass
+
+    return suggestions[:size]
+
+
 def _search_keyword(query: str) -> dict | None:
     data = _get("/search/keyword.json", {"query": query})
     documents = data.get("documents") or []

@@ -20,3 +20,9 @@ class RegionTrendFeatures(BaseModel):
     apt_price_trend_sale_mom_change_pct: float | None
     apt_price_trend_jeonse_latest: float | None
     apt_price_trend_jeonse_mom_change_pct: float | None
+    land_price_change_latest: float | None = None
+    land_price_change_unit: str | None = None
+    land_price_change_period: str | None = None
+    rental_trend_office_latest: float | None = None
+    rental_trend_office_unit: str | None = None
+    rental_trend_office_period: str | None = None

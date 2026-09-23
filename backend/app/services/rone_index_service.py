@@ -1,9 +1,11 @@
-"""한국부동산원 R-ONE 지역별 주택가격지수 수집·조회 서비스.
+"""한국부동산원 R-ONE 지역별 주택가격지수·지가변동률·임대동향지수 수집·조회 서비스.
 
-수집 대상 3개 통계표 (data.go.kr가 아닌 R-ONE 자체 도메인에서 실제 라이브 조회로 확인됨):
+수집 대상 5개 통계표 (data.go.kr가 아닌 R-ONE 자체 도메인에서 실제 라이브 조회로 확인됨):
 - A_2024_00176: (월) 지역별 매매지수_공동주택통합 → "공동주택 실거래가격지수"(신고 실거래 기반, 매매)
 - A_2024_00045: (월) 매매가격지수_아파트 → 전국주택가격동향조사 매매가격지수(표본조사 기반)
 - A_2024_00050: (월) 전세가격지수_아파트 → 전국주택가격동향조사 전세가격지수(표본조사 기반)
+- A_2024_00903: (월) 지역별 지가변동률 → 법정동 단위 변동률(%)
+- TT244963134453269: 임대동향 지역별 임대가격지수(오피스, 분기) → 상권 단위 지수
 
 dedup 키는 (statbl_id, region_cd, period) 조합이다. 시세 추정 엔진(XGBoost)은 이미 학습된 고정
 피처셋을 쓰므로, 이 모듈은 재학습 없이 바로 쓸 수 있는 "지역 트렌드 보조 지표" 조회 함수
@@ -17,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from app.models.batch_run_log import BatchRunLog
 from app.models.regional_price_index import RegionalPriceIndex
+from app.models.regional_rone_indicator import RegionalRoneIndicator
 from app.services.external.rone_client import RoneApiError, fetch_stats
 
 TABLE_DEFS = [
@@ -65,11 +68,39 @@ SIDO_SHORT_NAME = {
 }
 
 
+INDICATOR_TABLE_DEFS = [
+    {
+        "job_name": "rone_land_price_change",
+        "statbl_id": "A_2024_00903",
+        "indicator_type": "land_price_change_rate",
+        "dtacycle_cd": "MM",
+        "period_type": "month",
+        "label": "지역별 지가변동률",
+    },
+    {
+        "job_name": "rone_rental_trend_office",
+        "statbl_id": "TT244963134453269",
+        "indicator_type": "rental_price_index",
+        "dtacycle_cd": "QY",
+        "period_type": "quarter",
+        "label": "임대동향 지역별 임대가격지수(오피스)",
+    },
+]
+
+
 def _recent_period_range(months_back: int) -> tuple[str, str]:
     today = date.today()
     total_months = today.year * 12 + (today.month - 1) - (months_back - 1)
     start_year, start_month = divmod(total_months, 12)
     return f"{start_year:04d}{start_month + 1:02d}", today.strftime("%Y%m")
+
+
+def _recent_quarter_range(quarters_back: int) -> tuple[str, str]:
+    today = date.today()
+    current_q = (today.month - 1) // 3 + 1
+    total_quarters = today.year * 4 + (current_q - 1) - (quarters_back - 1)
+    start_year, start_q = divmod(total_quarters, 4)
+    return f"{start_year:04d}-{start_q + 1}", f"{today.year:04d}-{current_q}"
 
 
 def upsert_price_index(db: Session, table_def: dict, raw: dict) -> tuple[RegionalPriceIndex | None, bool]:
@@ -159,6 +190,98 @@ def collect_regional_price_indices(db: Session, months_back: int = 6) -> list[di
     return [_collect_one_table(db, table_def, months_back) for table_def in TABLE_DEFS]
 
 
+def upsert_indicator(db: Session, table_def: dict, raw: dict) -> tuple[RegionalRoneIndicator | None, bool]:
+    """raw row 1건을 regional_rone_indicators에 저장한다. (저장된 행, 신규 여부) 반환."""
+
+    region_cd = raw.get("CLS_ID")
+    period = raw.get("WRTTIME_IDTFR_ID")
+    dta_val = raw.get("DTA_VAL")
+    if region_cd is None or not period or dta_val is None:
+        return None, False
+
+    duplicate = (
+        db.query(RegionalRoneIndicator)
+        .filter_by(statbl_id=table_def["statbl_id"], region_cd=region_cd, period=period)
+        .first()
+    )
+    if duplicate is not None:
+        return duplicate, False
+
+    obj = RegionalRoneIndicator(
+        statbl_id=table_def["statbl_id"],
+        indicator_type=table_def["indicator_type"],
+        period=period,
+        period_type=table_def["period_type"],
+        region_cd=region_cd,
+        region_name=raw.get("CLS_NM") or "",
+        region_full_name=raw.get("CLS_FULLNM") or "",
+        value=float(dta_val),
+        unit=raw.get("UI_NM") or "",
+    )
+    db.add(obj)
+    db.flush()
+    return obj, True
+
+
+def _collect_one_indicator_table(db: Session, table_def: dict) -> dict:
+    log = BatchRunLog(job_name=table_def["job_name"], status="running")
+    db.add(log)
+    db.flush()
+
+    if table_def["period_type"] == "quarter":
+        start_wrttime, end_wrttime = _recent_quarter_range(4)
+    else:
+        start_wrttime, end_wrttime = _recent_period_range(6)
+
+    collected = skipped = failed = 0
+    error_message = None
+
+    try:
+        raw_rows = fetch_stats(table_def["statbl_id"], table_def["dtacycle_cd"], start_wrttime, end_wrttime)
+    except RoneApiError as e:
+        log.collected_count = 0
+        log.skipped_count = 0
+        log.fail_count = 1
+        log.error_message = str(e)
+        log.status = "failed"
+        log.finished_at = datetime.now(timezone.utc)
+        db.commit()
+        return {"job_name": table_def["job_name"], "collected": 0, "skipped": 0, "failed": 1, "status": "failed", "error": str(e)}
+
+    for raw in raw_rows:
+        try:
+            _, was_new = upsert_indicator(db, table_def, raw)
+            collected += 1 if was_new else 0
+            skipped += 0 if was_new else 1
+        except Exception as e:
+            failed += 1
+            error_message = str(e)
+
+    db.commit()
+    log.collected_count = collected
+    log.skipped_count = skipped
+    log.fail_count = failed
+    log.error_message = error_message
+    log.status = "failed" if (collected == 0 and skipped == 0 and failed) else ("partial_failure" if failed else "success")
+    log.finished_at = datetime.now(timezone.utc)
+    db.commit()
+
+    return {
+        "job_name": table_def["job_name"],
+        "collected": collected,
+        "skipped": skipped,
+        "failed": failed,
+        "status": log.status,
+        "error": error_message,
+    }
+
+
+def collect_regional_indicators(db: Session) -> list[dict]:
+    """지가변동률·임대동향지수 통계표를 수집한다."""
+
+    return [_collect_one_indicator_table(db, table_def) for table_def in INDICATOR_TABLE_DEFS]
+
+
 def get_region_trend_features(db: Session, sido: str, sigungu: str | None = None) -> dict:
     """시세 추정 엔진 등에서 지역 트렌드 보조 피처로 쓸 수 있는 최신 지수·변동률 요약을 반환한다.
 
@@ -199,5 +322,29 @@ def get_region_trend_features(db: Session, sido: str, sigungu: str | None = None
             result[f"{key}_mom_change_pct"] = round((rows[0].index_value - rows[1].index_value) / rows[1].index_value * 100, 2)
         else:
             result[f"{key}_mom_change_pct"] = None
+
+    for table_def in INDICATOR_TABLE_DEFS:
+        key = table_def["job_name"].removeprefix("rone_")
+
+        rows = []
+        for candidate in ([sigungu] if sigungu else []) + [short_sido]:
+            rows = (
+                db.query(RegionalRoneIndicator)
+                .filter(RegionalRoneIndicator.statbl_id == table_def["statbl_id"], RegionalRoneIndicator.region_name == candidate)
+                .order_by(RegionalRoneIndicator.period.desc())
+                .limit(2)
+                .all()
+            )
+            if rows:
+                break
+
+        if not rows:
+            result[f"{key}_latest"] = None
+            result[f"{key}_unit"] = None
+            continue
+
+        result[f"{key}_latest"] = rows[0].value
+        result[f"{key}_unit"] = rows[0].unit
+        result[f"{key}_period"] = rows[0].period
 
     return result

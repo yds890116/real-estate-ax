@@ -48,13 +48,14 @@ def _run_weekly_regional_stats_job() -> None:
 
 def _run_monthly_rone_price_index_job() -> None:
     from app.db.session import SessionLocal
-    from app.services.rone_index_service import collect_regional_price_indices
+    from app.services.rone_index_service import collect_regional_indicators, collect_regional_price_indices
 
     logger.info("R-ONE 지역별 주택가격지수 월간 배치 시작")
     db = SessionLocal()
     try:
         result = collect_regional_price_indices(db)
-        logger.info("R-ONE 지역별 주택가격지수 월간 배치 완료: %s", result)
+        indicator_result = collect_regional_indicators(db)
+        logger.info("R-ONE 지역별 주택가격지수 월간 배치 완료: %s / 지가변동률·임대동향지수: %s", result, indicator_result)
     except Exception:
         logger.exception("R-ONE 지역별 주택가격지수 월간 배치 실행 중 예외 발생")
     finally:

@@ -177,6 +177,11 @@ button {
   color: var(--text-muted);
 }
 
+.badge-warning {
+  background: #fff4e5;
+  color: var(--grade-warning);
+}
+
 /* --- Valuation card --- */
 
 .valuation-price {
@@ -644,4 +649,210 @@ th {
 .search-form-row button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+}
+
+.button-row button {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button-row button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Onbid monitor --- */
+
+.onbid-date-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.onbid-date-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.onbid-date-chip-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.onbid-date-chip-count {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.onbid-date-chip-active .onbid-date-chip-count {
+  color: var(--accent);
+}
+
+.onbid-score-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.onbid-score-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.onbid-source-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+/* --- Autocomplete --- */
+
+.autocomplete-box {
+  position: relative;
+  flex: 1;
+}
+
+.autocomplete-box input {
+  width: 100%;
+  font-size: 14px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.12);
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.autocomplete-dropdown li {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.autocomplete-dropdown li:hover,
+.autocomplete-dropdown li.autocomplete-item-active {
+  background: var(--accent-soft);
+}
+
+.autocomplete-place-name {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.autocomplete-address {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* --- Collateral search form --- */
+
+.collateral-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.collateral-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.collateral-form-grid input,
+.collateral-form-grid select {
+  font-size: 13.5px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* --- Skeleton loading --- */
+
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.skeleton-block {
+  background: var(--border);
+  border-radius: 6px;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-card .skeleton-block + .skeleton-block {
+  margin-top: 10px;
+}
+
+.skeleton-title {
+  height: 16px;
+  width: 40%;
+}
+
+.skeleton-line {
+  height: 12px;
+  width: 100%;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+.skeleton-hero {
+  height: 44px;
+  width: 220px;
+  margin: 10px auto;
 }

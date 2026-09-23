@@ -34,5 +34,10 @@ class OnbidAuctionItem(Base):
     pbct_cltr_stat_nm: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 물건상태
     uscbd_cnt: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 유찰횟수
 
+    # 감정평가 기준정보 (통합용도별물건감정평가서정보상세 - 신규 물건 수집 시 best-effort로 채움)
+    appraisal_amt: Mapped[int | None] = mapped_column(Integer, nullable=True)  # APSL_ASES_AMT, 원
+    appraisal_date: Mapped[str | None] = mapped_column(String(20), nullable=True)  # APSL_ASES_DT
+    appraisal_org_nm: Mapped[str | None] = mapped_column(String(120), nullable=True)  # APSL_ASES_ORG_NM
+
     source: Mapped[str] = mapped_column(String(20), default="onbid_api")
     collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

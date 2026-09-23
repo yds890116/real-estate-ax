@@ -9,10 +9,12 @@ class CollectionRunResult(BaseModel):
     failed: int
     status: str
     error: str | None = None
+    appraisal_enriched: int = 0
 
 
 class DailyCollectionRunResult(BaseModel):
     onbid_auction: CollectionRunResult
+    court_auction: CollectionRunResult
     naver_news: CollectionRunResult
 
 

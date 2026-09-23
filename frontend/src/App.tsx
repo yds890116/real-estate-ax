@@ -15,15 +15,18 @@ import {
   updateOpinion,
 } from './api/client'
 import { AppraisalCard } from './components/AppraisalCard'
+import { CollateralSearchView } from './components/CollateralSearchView'
 import { Dashboard } from './components/Dashboard'
 import { ListingComparisonCard } from './components/ListingComparisonCard'
 import { ListingsCard } from './components/ListingsCard'
+import { OnbidMonitorView } from './components/OnbidMonitorView'
 import { OpinionSection } from './components/OpinionSection'
 import { PriceTrendChart } from './components/PriceTrendChart'
 import { RegionalStatsSummaryCard } from './components/RegionalStatsSummaryCard'
 import { RegionalStatsView } from './components/RegionalStatsView'
 import { RegistryTab } from './components/RegistryTab'
 import { RiskCard } from './components/RiskCard'
+import { ScoringModelView } from './components/ScoringModelView'
 import { TransactionSearch } from './components/TransactionSearch'
 import { ValuationCard } from './components/ValuationCard'
 import type {
@@ -38,7 +41,7 @@ import type {
   ReviewOpinionResult,
 } from './types'
 
-type View = 'analysis' | 'registry' | 'dashboard' | 'regional-stats'
+type View = 'analysis' | 'registry' | 'dashboard' | 'regional-stats' | 'collateral-search' | 'onbid-monitor' | 'scoring-model'
 
 function App() {
   const [view, setView] = useState<View>('analysis')
@@ -258,6 +261,27 @@ function App() {
             >
               지역별 입찰통계
             </button>
+            <button
+              type="button"
+              className={view === 'collateral-search' ? 'tab-active' : ''}
+              onClick={() => setView('collateral-search')}
+            >
+              담보물건 검색
+            </button>
+            <button
+              type="button"
+              className={view === 'onbid-monitor' ? 'tab-active' : ''}
+              onClick={() => setView('onbid-monitor')}
+            >
+              경매·공매 모니터링
+            </button>
+            <button
+              type="button"
+              className={view === 'scoring-model' ? 'tab-active' : ''}
+              onClick={() => setView('scoring-model')}
+            >
+              스코어링 모델
+            </button>
           </nav>
         </div>
       </header>
@@ -269,6 +293,18 @@ function App() {
       ) : view === 'regional-stats' ? (
         <main className="dashboard-layout">
           <RegionalStatsView />
+        </main>
+      ) : view === 'collateral-search' ? (
+        <main className="dashboard-layout">
+          <CollateralSearchView />
+        </main>
+      ) : view === 'onbid-monitor' ? (
+        <main className="dashboard-layout">
+          <OnbidMonitorView />
+        </main>
+      ) : view === 'scoring-model' ? (
+        <main className="dashboard-layout">
+          <ScoringModelView />
         </main>
       ) : view === 'registry' ? (
         <main className="dashboard-layout">

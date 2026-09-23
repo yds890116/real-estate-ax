@@ -74,6 +74,86 @@ export interface PropertyAnalysis {
   appraisal: AppraisalSearchResult
   listings: ListingSearchResult | null
   listing_comparison: ListingComparison | null
+  regional_trend: RegionTrendFeatures | null
+  cost_income_estimate: CostIncomeEstimate | null
+}
+
+export interface RegionTrendFeatures {
+  sido: string
+  sigungu: string | null
+  region_matched: string | null
+  apt_actual_txn_sale_latest: number | null
+  apt_actual_txn_sale_mom_change_pct: number | null
+  apt_price_trend_sale_latest: number | null
+  apt_price_trend_sale_mom_change_pct: number | null
+  apt_price_trend_jeonse_latest: number | null
+  apt_price_trend_jeonse_mom_change_pct: number | null
+  land_price_change_latest: number | null
+  land_price_change_unit: string | null
+  land_price_change_period: string | null
+  rental_trend_office_latest: number | null
+  rental_trend_office_unit: string | null
+  rental_trend_office_period: string | null
+}
+
+export interface CostIncomeEstimate {
+  property_type: string
+  replacement_cost_per_area: number
+  depreciation_rate_pct: number
+  cost_approach_price: number
+  unit_rent_per_area: number
+  vacancy_rate_pct: number
+  opex_ratio_pct: number
+  cap_rate_pct: number
+  annual_noi: number
+  income_approach_price: number
+  estimated_price: number
+  price_per_area: number
+  confidence_level: number
+  disclaimer: string
+}
+
+export interface HogangnonoAreaPrice {
+  area_no: number
+  private_area: number
+  real_trade_price: number | null
+  portal_trade_price: number | null
+  real_rent_price: number | null
+  portal_rent_price: number | null
+}
+
+export interface HogangnonoListingItem {
+  item_id: number
+  trade_type: '매매' | '전세' | '월세' | '기타'
+  price: number
+  monthly_rent: number | null
+  private_area: number
+  public_area: number | null
+  floor_tier: string | null
+  dong_name: string | null
+  room_type: string | null
+  title: string | null
+}
+
+export interface HogangnonoComplexResult {
+  found: boolean
+  complex_name: string | null
+  address: string | null
+  road_address: string | null
+  total_household: number | null
+  areas: HogangnonoAreaPrice[]
+  listings: HogangnonoListingItem[]
+  source: string
+  notice: string | null
+}
+
+export interface AutocompleteSuggestion {
+  place_name: string
+  address_name: string
+  road_address_name: string | null
+  x: string
+  y: string
+  category_group_name: string | null
 }
 
 export interface ListingItem {
@@ -293,6 +373,109 @@ export interface RegionalBidStatSummary {
   source: 'onbid_stats_api' | 'sample'
   is_sample_data: boolean
   notice: string
+}
+
+export interface CollateralScore {
+  score: number
+  grade: number
+  grade_label: string
+  method: 'ml' | 'rule'
+  observed_uscbd_cnt: number
+}
+
+export interface OnbidAuctionItemResponse {
+  id: number
+  cltr_mnmt_no: string
+  plnm_no: string | null
+  pbct_no: string | null
+  cltr_nm: string | null
+  ctgr_full_nm: string | null
+  ldnm_adrs: string | null
+  nmrd_adrs: string | null
+  dpsl_mtd_nm: string | null
+  bid_mtd_nm: string | null
+  min_bid_prc: number | null
+  apsl_ases_avg_amt: number | null
+  fee_rate: string | null
+  pbct_begn_dtm: string | null
+  pbct_cls_dtm: string | null
+  pbct_cltr_stat_nm: string | null
+  uscbd_cnt: number | null
+  appraisal_amt: number | null
+  appraisal_date: string | null
+  appraisal_org_nm: string | null
+  collected_at: string
+  score: CollateralScore | null
+}
+
+export interface DailyCollectionSummary {
+  collected_date: string
+  item_count: number
+}
+
+export interface DailyItemsResponse {
+  date: string
+  items: OnbidAuctionItemResponse[]
+}
+
+export interface CollateralScoreTrainResult {
+  n_rows: number
+  trained_at: string
+  source_breakdown: Record<string, number>
+  feature_importances: Record<string, number>
+  mae: number
+  rmse: number
+  r2: number
+}
+
+export interface CollateralScoreModelInfo {
+  is_available: boolean
+  n_rows: number
+  source_breakdown: Record<string, number>
+  trained_at: string | null
+  metrics: Record<string, number>
+  feature_importances: Record<string, number>
+  feature_descriptions: Record<string, string>
+  target_description: string
+}
+
+export interface CourtAuctionItemResponse {
+  id: number
+  docid: string
+  case_no: string
+  item_no: string | null
+  court_name: string | null
+  dept_name: string | null
+  usage_name: string | null
+  address: string | null
+  building_detail: string | null
+  remarks: string | null
+  appraisal_amt: number | null
+  min_sale_price: number | null
+  min_sale_price_rate: string | null
+  failed_count: number | null
+  sale_date: string | null
+  status: string | null
+  collected_at: string
+}
+
+export interface CourtAuctionDailyCollectionSummary {
+  collected_date: string
+  item_count: number
+}
+
+export interface CourtAuctionDailyItemsResponse {
+  date: string
+  items: CourtAuctionItemResponse[]
+}
+
+export interface CollectionRunResult {
+  collected: number
+  skipped: number
+  failed: number
+  status: string
+  error: string | null
+  appraisal_enriched: number
 }
 
 export interface RentTransaction {
