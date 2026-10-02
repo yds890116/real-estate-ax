@@ -1,15 +1,5 @@
 import type { RegionTrendFeatures } from '../types'
-
-function ChangeBadge({ value }: { value: number | null }) {
-  if (value == null) return <span className="hint">-</span>
-  const cls = value > 0 ? 'impact-negative' : value < 0 ? 'impact-positive' : ''
-  return (
-    <span className={`factor-item ${cls}`} style={{ display: 'inline-block', padding: '2px 8px' }}>
-      {value > 0 ? '+' : ''}
-      {value.toFixed(2)}%
-    </span>
-  )
-}
+import { TrendTag } from './TrendTag'
 
 export function RegionalTrendCard({ trend }: { trend: RegionTrendFeatures }) {
   const rows = [
@@ -47,7 +37,7 @@ export function RegionalTrendCard({ trend }: { trend: RegionTrendFeatures }) {
               <span className="factor-name">{r.label}</span>
               <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <span className="stat-value">{r.latest != null ? r.latest.toFixed(2) : '데이터 없음'}</span>
-                <ChangeBadge value={r.change} />
+                <TrendTag value={r.change} />
               </span>
             </div>
           </div>

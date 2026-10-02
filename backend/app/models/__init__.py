@@ -8,6 +8,7 @@ from app.models.onbid_auction_item import OnbidAuctionItem  # noqa: F401
 from app.models.opinion import ReviewOpinion  # noqa: F401
 from app.models.property import Property  # noqa: F401
 from app.models.regional_bid_stat import RegionalBidStat  # noqa: F401
+from app.models.regional_kb_price_index import RegionalKbPriceIndex  # noqa: F401
 from app.models.regional_price_index import RegionalPriceIndex  # noqa: F401
 from app.models.regional_rone_indicator import RegionalRoneIndicator  # noqa: F401
 from app.models.registry_analysis import RegistryAnalysis  # noqa: F401

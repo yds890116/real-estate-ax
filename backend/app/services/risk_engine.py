@@ -56,6 +56,7 @@ class RiskEngine:
         valuation: ValuationResult,
         db: Session,
         mortgage_total: int | None = None,
+        land_valuation_score: float | None = None,
     ) -> RiskScoreResult:
         raw_indicators: dict[str, tuple[str, float, str]] = {
             "price_cv": ind.price_volatility_cv(db, prop.sigungu),
@@ -66,6 +67,7 @@ class RiskEngine:
             "population_change": ind.population_change(prop.sigungu),
             "building_age": ind.building_age(prop.build_year),
             "mortgage_ratio": ind.mortgage_ratio(mortgage_total, valuation.estimated_price),
+            "land_value": ind.land_value(land_valuation_score),
             "regulation_zone": ind.regulation_zone(prop.sigungu),
         }
 

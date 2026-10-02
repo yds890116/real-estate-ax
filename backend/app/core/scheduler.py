@@ -62,6 +62,21 @@ def _run_monthly_rone_price_index_job() -> None:
         db.close()
 
 
+def _run_monthly_kb_price_index_job() -> None:
+    from app.db.session import SessionLocal
+    from app.services.kb_stats_service import collect_kb_price_indices
+
+    logger.info("KB부동산 매매/전세/월세 가격지수 월간 배치 시작")
+    db = SessionLocal()
+    try:
+        result = collect_kb_price_indices(db)
+        logger.info("KB부동산 매매/전세/월세 가격지수 월간 배치 완료: %s", result)
+    except Exception:
+        logger.exception("KB부동산 매매/전세/월세 가격지수 월간 배치 실행 중 예외 발생")
+    finally:
+        db.close()
+
+
 def start_scheduler() -> None:
     if scheduler.running:
         return
@@ -92,10 +107,19 @@ def start_scheduler() -> None:
         id="monthly_rone_price_index",
         replace_existing=True,
     )
+    scheduler.add_job(
+        _run_monthly_kb_price_index_job,
+        trigger="cron",
+        day=settings.KB_STATS_SCHEDULE_DAY,
+        hour=settings.KB_STATS_SCHEDULE_HOUR,
+        minute=settings.KB_STATS_SCHEDULE_MINUTE,
+        id="monthly_kb_price_index",
+        replace_existing=True,
+    )
     scheduler.start()
     logger.info(
         "데이터 수집 배치 스케줄 등록 완료: 일일 %02d:%02d / 지역별 입찰통계 매주 %d요일 %02d:%02d / "
-        "R-ONE 지역별 주택가격지수 매월 %d일 %02d:%02d (Asia/Seoul)",
+        "R-ONE 지역별 주택가격지수 매월 %d일 %02d:%02d / KB부동산 가격지수 매월 %d일 %02d:%02d (Asia/Seoul)",
         settings.BATCH_SCHEDULE_HOUR,
         settings.BATCH_SCHEDULE_MINUTE,
         settings.ONBID_STATS_SCHEDULE_DAY_OF_WEEK,
@@ -104,6 +128,9 @@ def start_scheduler() -> None:
         settings.RONE_SCHEDULE_DAY,
         settings.RONE_SCHEDULE_HOUR,
         settings.RONE_SCHEDULE_MINUTE,
+        settings.KB_STATS_SCHEDULE_DAY,
+        settings.KB_STATS_SCHEDULE_HOUR,
+        settings.KB_STATS_SCHEDULE_MINUTE,
     )
 
 

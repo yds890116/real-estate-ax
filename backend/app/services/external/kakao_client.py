@@ -58,6 +58,7 @@ class LocationResult:
     lawd_cd: str  # 법정동코드 앞 5자리 (시군구 코드)
     jibun: str | None  # 지번 (있는 경우)
     complex_name_hint: str | None  # 단지명 추정치 (건물명/장소명)
+    road_address_name: str | None  # 도로명주소 전체 문자열 (있는 경우) - 간선도로 접근성 추정용
     x: str | None
     y: str | None
     source: str  # "address" | "keyword"
@@ -158,6 +159,32 @@ def search_autocomplete(query: str, size: int = 5) -> list[AutocompleteSuggestio
     return suggestions[:size]
 
 
+SUBWAY_CATEGORY_CODE = "SW8"  # 카카오 로컬 API 카테고리 코드: 지하철역
+
+
+def search_category(x: str, y: str, category_group_code: str, radius: int = 3000) -> list[dict]:
+    """좌표 주변 category_group_code(예: SW8=지하철역)를 거리순으로 검색한다."""
+
+    data = _get(
+        "/search/category.json",
+        {"category_group_code": category_group_code, "x": x, "y": y, "radius": radius, "sort": "distance"},
+    )
+    return data.get("documents") or []
+
+
+def find_nearest_subway_station(x: str, y: str) -> tuple[str, float] | None:
+    """가장 가까운 지하철역의 (역명, 거리(m))를 반환한다. 반경 3km 내에 없으면 None."""
+
+    docs = search_category(x, y, SUBWAY_CATEGORY_CODE, radius=3000)
+    if not docs:
+        return None
+    nearest = docs[0]
+    try:
+        return nearest.get("place_name", ""), float(nearest.get("distance", 0))
+    except (TypeError, ValueError):
+        return None
+
+
 def _search_keyword(query: str) -> dict | None:
     data = _get("/search/keyword.json", {"query": query})
     documents = data.get("documents") or []
@@ -190,6 +217,7 @@ def resolve_location(query: str) -> LocationResult:
             lawd_cd=addr["b_code"][:5],
             jibun=jibun,
             complex_name_hint=road.get("building_name") or None,
+            road_address_name=road.get("address_name") or None,
             x=addr.get("x"),
             y=addr.get("y"),
             source="address",
@@ -210,6 +238,7 @@ def resolve_location(query: str) -> LocationResult:
             lawd_cd=region_doc["code"][:5],
             jibun=None,
             complex_name_hint=keyword_doc.get("place_name") or None,
+            road_address_name=keyword_doc.get("road_address_name") or None,
             x=x,
             y=y,
             source="keyword",

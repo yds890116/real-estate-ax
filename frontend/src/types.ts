@@ -76,6 +76,7 @@ export interface PropertyAnalysis {
   listing_comparison: ListingComparison | null
   regional_trend: RegionTrendFeatures | null
   cost_income_estimate: CostIncomeEstimate | null
+  land_valuation: LandValuationResult | null
 }
 
 export interface RegionTrendFeatures {
@@ -437,6 +438,64 @@ export interface CollateralScoreModelInfo {
   feature_importances: Record<string, number>
   feature_descriptions: Record<string, string>
   target_description: string
+}
+
+export interface LandCharacteristics {
+  pnu: string | null
+  jimok: string | null
+  land_use_zone: string | null
+  land_use_district: string | null
+  official_land_price: number | null
+  official_land_price_base_date: string | null
+  address: string | null
+  available: boolean
+  notice: string
+}
+
+export interface DevelopmentPotential {
+  legal_bcr_cap_pct: number | null
+  legal_far_cap_pct: number | null
+  current_floors: number | null
+  implied_max_floors: number | null
+  utilization_ratio_pct: number | null
+  development_potential_index: number | null
+  notice: string
+}
+
+export interface LocationValue {
+  nearest_subway_name: string | null
+  nearest_subway_distance_m: number | null
+  road_type: string | null
+  location_value_score: number | null
+  notice: string
+}
+
+export interface LandValuationResult {
+  characteristics: LandCharacteristics
+  development_potential: DevelopmentPotential
+  location_value: LocationValue
+  land_price_change_pct: number | null
+  land_trade_price_per_sqm: number | null
+  land_valuation_score: number | null
+  disclaimer: string
+}
+
+export interface KbPriceTrendPoint {
+  period: string
+  sale_index: number | null
+  jeonse_index: number | null
+  wolse_index: number | null
+  sale_change_rate: number | null
+  jeonse_change_rate: number | null
+  wolse_change_rate: number | null
+}
+
+export interface KbPriceTrendResponse {
+  sido: string
+  region_matched: string | null
+  region_cd: string | null
+  points: KbPriceTrendPoint[]
+  notice: string
 }
 
 export interface CourtAuctionItemResponse {

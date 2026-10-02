@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     # 카카오맵 주소/키워드 검색 (주소·단지명 → 좌표·법정동코드 변환용)
     KAKAO_REST_API_KEY: str = ""
 
+    # 국토교통부 공간정보 오픈플랫폼 브이월드(V-World) - 지목/용도지역/개별공시지가 등 토지특성 조회
+    # https://www.vworld.kr/dev/ 회원가입 후 "오픈API 인증키 발급" 메뉴에서 발급
+    VWORLD_API_KEY: str = ""
+    # 발급 시 등록한 서비스 도메인(인증키가 그 도메인에서의 요청만 허용) - 로컬 개발 기본값은 localhost
+    VWORLD_DOMAIN: str = "localhost"
+
     # 한국자산관리공사 온비드 공공데이터포털 서비스키 (MOLIT_SERVICE_KEY와 동일 계정 키를 공유 사용 가능)
     ONBID_SERVICE_KEY: str = ""
 
@@ -60,6 +66,11 @@ class Settings(BaseSettings):
     RONE_SCHEDULE_DAY: int = 1
     RONE_SCHEDULE_HOUR: int = 5
     RONE_SCHEDULE_MINUTE: int = 0
+
+    # KB부동산 데이터허브 주택가격동향조사(매매/전세/월세 가격지수)도 월 단위 집계라 매월 1회만 수집한다.
+    KB_STATS_SCHEDULE_DAY: int = 1
+    KB_STATS_SCHEDULE_HOUR: int = 5
+    KB_STATS_SCHEDULE_MINUTE: int = 30
 
     class Config:
         env_file = ".env"

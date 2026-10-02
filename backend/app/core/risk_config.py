@@ -29,7 +29,7 @@ INDICATOR_WEIGHTS: dict[str, dict[str, float]] = {
     "price_volatility": {"price_cv": 0.6, "jeonse_ratio": 0.4},
     "liquidity": {"volume_change": 0.5, "auction_ratio": 0.5},
     "regional_supply": {"unsold_units": 0.5, "population_change": 0.5},
-    "property_risk": {"building_age": 0.4, "mortgage_ratio": 0.6},
+    "property_risk": {"building_age": 0.3, "mortgage_ratio": 0.5, "land_value": 0.2},
     "policy_risk": {"regulation_zone": 1.0},
 }
 
@@ -42,6 +42,7 @@ INDICATOR_LABELS: dict[str, str] = {
     "population_change": "인구 증감률",
     "building_age": "건물 연식",
     "mortgage_ratio": "근저당 설정액 대비 시세비율",
+    "land_value": "토지가치평가(개발잠재력·입지가치)",
     "regulation_zone": "규제지역 LTV 한도",
 }
 

@@ -27,6 +27,7 @@ import { RegionalStatsView } from './components/RegionalStatsView'
 import { RegistryTab } from './components/RegistryTab'
 import { RiskCard } from './components/RiskCard'
 import { ScoringModelView } from './components/ScoringModelView'
+import { ThemeToggle } from './components/ThemeToggle'
 import { TransactionSearch } from './components/TransactionSearch'
 import { ValuationCard } from './components/ValuationCard'
 import type {
@@ -237,13 +238,10 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
+    <div className="app-shell">
+      <header className="app-topbar">
         <div className="app-header-row">
-          <div>
-            <h1>부동산 시세·리스크 종합분석</h1>
-            <p className="app-subtitle">담보가치·리스크 판단을 돕는 AI 참고 도구입니다. 최종 심사 판단은 심사역이 수행합니다.</p>
-          </div>
+          <h1 style={{ fontSize: 15, margin: 0, whiteSpace: 'nowrap' }}>부동산 시세·리스크 종합분석</h1>
           <nav className="tab-nav">
             <button type="button" className={view === 'analysis' ? 'tab-active' : ''} onClick={() => setView('analysis')}>
               종합분석
@@ -283,91 +281,96 @@ function App() {
               스코어링 모델
             </button>
           </nav>
+          <div className="app-header-actions">
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
-      {view === 'dashboard' ? (
-        <main className="dashboard-layout">
-          <Dashboard items={dashboardItems} loading={dashboardLoading} error={dashboardError} onSelect={handleSelectProperty} />
-        </main>
-      ) : view === 'regional-stats' ? (
-        <main className="dashboard-layout">
-          <RegionalStatsView />
-        </main>
-      ) : view === 'collateral-search' ? (
-        <main className="dashboard-layout">
-          <CollateralSearchView />
-        </main>
-      ) : view === 'onbid-monitor' ? (
-        <main className="dashboard-layout">
-          <OnbidMonitorView />
-        </main>
-      ) : view === 'scoring-model' ? (
-        <main className="dashboard-layout">
-          <ScoringModelView />
-        </main>
-      ) : view === 'registry' ? (
-        <main className="dashboard-layout">
-          <RegistryTab
-            properties={registryProperties}
-            selectedPropertyId={registrySelectedPropertyId}
-            onSelectProperty={setRegistrySelectedPropertyId}
-            onUpload={handleRegistryUpload}
-            loading={registryLoading}
-            error={registryError}
-            result={registryResult}
-          />
-        </main>
+      {view === 'collateral-search' ? (
+        <CollateralSearchView />
       ) : (
-        <main className="dashboard-layout">
-          <TransactionSearch
-            onSearch={handleSearch}
-            onAnalyze={handleAnalyze}
-            result={searchResult}
-            loading={searchLoading}
-            analyzing={loading}
-            error={searchError}
-          />
-
-          {error && <div className="error-banner">⚠ {error}</div>}
-          {loading && <div className="placeholder">분석 중입니다...</div>}
-
-          {analysis && (
-            <div className="search-view" ref={analysisSectionRef}>
-              <div className="ai-draft-banner">
-                🤖 3. AI 추정시세·담보리스크·유사사례 — 심사역 검토 전 참고용 분석 결과입니다.
-              </div>
-
-              <div className="results-grid">
-                <ValuationCard valuation={analysis.valuation} />
-                <RiskCard risk={analysis.risk} />
-              </div>
-
-              {regionalStatsSummary && <RegionalStatsSummaryCard summary={regionalStatsSummary} />}
-
-              <AppraisalCard appraisal={analysis.appraisal} />
-              {analysis.listings && (
-                <ListingsCard
-                  listings={analysis.listings}
-                  onScrape={handleScrapeListings}
-                  scraping={listingScraping}
-                  scrapeError={listingScrapeError}
-                />
-              )}
-              {analysis.listing_comparison && <ListingComparisonCard comparison={analysis.listing_comparison} />}
-
-              {opinionError && <div className="error-banner">⚠ {opinionError}</div>}
-              <OpinionSection
-                opinion={opinion}
-                loading={opinionLoading}
-                onGenerate={handleGenerateOpinion}
-                onSave={handleSaveOpinion}
+        <div className="app">
+          {view === 'dashboard' ? (
+            <main className="dashboard-layout">
+              <Dashboard items={dashboardItems} loading={dashboardLoading} error={dashboardError} onSelect={handleSelectProperty} />
+            </main>
+          ) : view === 'regional-stats' ? (
+            <main className="dashboard-layout">
+              <RegionalStatsView />
+            </main>
+          ) : view === 'onbid-monitor' ? (
+            <main className="dashboard-layout">
+              <OnbidMonitorView />
+            </main>
+          ) : view === 'scoring-model' ? (
+            <main className="dashboard-layout">
+              <ScoringModelView />
+            </main>
+          ) : view === 'registry' ? (
+            <main className="dashboard-layout">
+              <RegistryTab
+                properties={registryProperties}
+                selectedPropertyId={registrySelectedPropertyId}
+                onSelectProperty={setRegistrySelectedPropertyId}
+                onUpload={handleRegistryUpload}
+                loading={registryLoading}
+                error={registryError}
+                result={registryResult}
+              />
+            </main>
+          ) : (
+            <main className="dashboard-layout">
+              <TransactionSearch
+                onSearch={handleSearch}
+                onAnalyze={handleAnalyze}
+                result={searchResult}
+                loading={searchLoading}
+                analyzing={loading}
+                error={searchError}
               />
 
-              <PriceTrendChart transactions={transactions} />
-            </div>
+              {error && <div className="error-banner">⚠ {error}</div>}
+              {loading && <div className="placeholder">분석 중입니다...</div>}
+
+              {analysis && (
+                <div className="search-view" ref={analysisSectionRef}>
+                  <div className="ai-draft-banner">
+                    🤖 AI 추정시세·담보리스크·유사사례 — 심사역 검토 전 참고용 분석 결과입니다.
+                  </div>
+
+                  <div className="results-grid">
+                    <ValuationCard valuation={analysis.valuation} />
+                    <RiskCard risk={analysis.risk} />
+                  </div>
+
+                  {regionalStatsSummary && <RegionalStatsSummaryCard summary={regionalStatsSummary} />}
+
+                  <AppraisalCard appraisal={analysis.appraisal} />
+                  {analysis.listings && (
+                    <ListingsCard
+                      listings={analysis.listings}
+                      onScrape={handleScrapeListings}
+                      scraping={listingScraping}
+                      scrapeError={listingScrapeError}
+                    />
+                  )}
+                  {analysis.listing_comparison && <ListingComparisonCard comparison={analysis.listing_comparison} />}
+
+                  {opinionError && <div className="error-banner">⚠ {opinionError}</div>}
+                  <OpinionSection
+                    opinion={opinion}
+                    loading={opinionLoading}
+                    onGenerate={handleGenerateOpinion}
+                    onSave={handleSaveOpinion}
+                  />
+
+                  <PriceTrendChart transactions={transactions} />
+                </div>
+              )}
+            </main>
           )}
-        </main>
+        </div>
       )}
     </div>
   )

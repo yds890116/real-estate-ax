@@ -40,12 +40,16 @@ export function OpinionSection({ opinion, loading, onGenerate, onSave }: Props) 
         </>
       ) : (
         <>
-          {isEdited && <p className="hint">✏️ 심사역이 AI 초안을 수정한 최종본입니다.</p>}
+          {isEdited && <p className="hint">심사역이 초안을 수정한 최종본입니다.</p>}
 
           <button type="button" className="link-button" onClick={() => setShowAiDraft((v) => !v)}>
-            {showAiDraft ? 'AI 초안 숨기기 ▲' : 'AI 초안 원문 보기 ▼'}
+            {showAiDraft ? '원본 숨기기 ▲' : '생성 원본 보기 ▼'}
           </button>
-          {showAiDraft && <pre className="opinion-readonly">{opinion.ai_draft}</pre>}
+          {showAiDraft && (
+            <div className="opinion-ai-block">
+              <pre className="opinion-readonly">{opinion.ai_draft}</pre>
+            </div>
+          )}
 
           <label className="opinion-label" htmlFor="opinion-final">
             심사역 최종본 (수정 가능)

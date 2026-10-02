@@ -1,8 +1,9 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ListingComparison } from '../types'
+import { TrendTag } from './TrendTag'
 
 function gapColor(gapRatio: number | null): string {
-  if (gapRatio == null) return 'var(--text-muted)'
+  if (gapRatio == null) return 'var(--text-secondary)'
   if (gapRatio > 5) return 'var(--grade-warning)'
   if (gapRatio < -5) return 'var(--accent)'
   return 'var(--grade-safe)'
@@ -18,12 +19,7 @@ export function ListingComparisonCard({ comparison }: { comparison: ListingCompa
     <section className="card">
       <div className="card-header">
         <h2>실거래가 vs 매물호가 비교</h2>
-        {comparison.gap_ratio != null && (
-          <span className="gap-badge" style={{ background: gapColor(comparison.gap_ratio) }}>
-            {comparison.gap_ratio > 0 ? '+' : ''}
-            {comparison.gap_ratio}%
-          </span>
-        )}
+        <TrendTag value={comparison.gap_ratio} decimals={1} />
       </div>
 
       <p className="hint">

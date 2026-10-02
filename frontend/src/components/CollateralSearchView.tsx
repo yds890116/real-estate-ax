@@ -1,17 +1,38 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { ApiError, createProperty, getHogangnonoPrice, getPropertyAnalysis, searchMarketTransactions } from '../api/client'
-import type { AutocompleteSuggestion, HogangnonoComplexResult, MarketSearchResult, PropertyAnalysis } from '../types'
-import { AutocompleteSearchBox } from './AutocompleteSearchBox'
+import {
+  analyzeRegistry,
+  ApiError,
+  createProperty,
+  getDashboard,
+  getHogangnonoPrice,
+  getPropertyAnalysis,
+  searchMarketTransactions,
+} from '../api/client'
+import type {
+  AutocompleteSuggestion,
+  DashboardItem,
+  HogangnonoComplexResult,
+  MarketSearchResult,
+  PropertyAnalysis,
+  RegistryAnalysisResult,
+} from '../types'
+import { AppraisalCard } from './AppraisalCard'
 import { CostIncomeCard } from './CostIncomeCard'
-import { HeadlineEstimateCard } from './HeadlineEstimateCard'
+import { DetailTabs } from './DetailTabs'
 import { HogangnonoCard } from './HogangnonoCard'
+import { KbStatsCard } from './KbStatsCard'
+import { LandValuationCard } from './LandValuationCard'
+import { ListingComparisonCard } from './ListingComparisonCard'
 import { MolitTransactionCard } from './MolitTransactionCard'
+import { OpinionSection } from './OpinionSection'
 import { RegionalTrendCard } from './RegionalTrendCard'
 import { RiskCard } from './RiskCard'
+import { Sidebar } from './Sidebar'
 import { SkeletonCard } from './SkeletonCard'
+import { SummaryHero } from './SummaryHero'
+import { useOpinion } from '../hooks/useOpinion'
 
-const ASSET_TYPES = ['아파트', '빌라', '오피스텔', '상가', '단독주택', '기타']
 const COMPARABLE_SALE_TYPES = new Set(['아파트', '빌라'])
 
 export function CollateralSearchView() {
@@ -31,9 +52,44 @@ export function CollateralSearchView() {
   const [hogangnonoResult, setHogangnonoResult] = useState<HogangnonoComplexResult | null>(null)
   const [hogangnonoLoading, setHogangnonoLoading] = useState(false)
 
+  const [recentItems, setRecentItems] = useState<DashboardItem[]>([])
+
+  const [registryResult, setRegistryResult] = useState<RegistryAnalysisResult | null>(null)
+  const [registryLoading, setRegistryLoading] = useState(false)
+  const [registryError, setRegistryError] = useState<string | null>(null)
+
+  const opinion = useOpinion(analysis?.property.id ?? null)
+
+  function refreshRecent() {
+    getDashboard()
+      .then(setRecentItems)
+      .catch(() => setRecentItems([]))
+  }
+
+  useEffect(() => {
+    refreshRecent()
+  }, [])
+
   function handleSelectSuggestion(s: AutocompleteSuggestion) {
     setQuery(s.road_address_name || s.address_name)
     setComplexHint(s.place_name || null)
+  }
+
+  async function loadMarketAndAnalysis(propertyId: number, marketQuery: string) {
+    setHogangnonoLoading(true)
+    getHogangnonoPrice(marketQuery, complexHint)
+      .then(setHogangnonoResult)
+      .catch(() => setHogangnonoResult(null))
+      .finally(() => setHogangnonoLoading(false))
+
+    const [searchResult, analysisResult] = await Promise.all([
+      searchMarketTransactions(marketQuery, 3).catch(() => null),
+      getPropertyAnalysis(propertyId),
+    ])
+    setMolitResult(searchResult)
+    setAnalysis(analysisResult)
+    setRegistryResult(null)
+    refreshRecent()
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -47,21 +103,9 @@ export function CollateralSearchView() {
     setMolitResult(null)
     setHogangnonoResult(null)
 
-    // 호갱노노 조회는 지도를 실제로 이동시키며 데이터를 모아 10~30초 걸릴 수 있어, 메인 분석과
-    // 별도로(블로킹 없이) 돌리고 준비되는 대로 채운다.
-    setHogangnonoLoading(true)
-    getHogangnonoPrice(query.trim(), complexHint)
-      .then(setHogangnonoResult)
-      .catch(() => setHogangnonoResult(null))
-      .finally(() => setHogangnonoLoading(false))
-
     try {
       const searchResult = await searchMarketTransactions(query.trim(), 3)
-      setMolitResult(searchResult)
-
       const loc = searchResult.location
-      // 자동완성 후보를 클릭하지 않고 바로 검색한 경우 complexHint가 비어있을 수 있다 —
-      // 이때는 카카오 주소/키워드 검색이 자체적으로 추정한 단지명(건물명)으로 대체한다.
       const resolvedComplexName = complexHint || loc.complex_name_hint
       const property = await createProperty({
         address: [loc.sido, loc.sigungu, loc.dong, resolvedComplexName].filter(Boolean).join(' '),
@@ -76,9 +120,17 @@ export function CollateralSearchView() {
         build_year: buildYear ? Number(buildYear) : null,
         household_count: null,
       })
+      setMolitResult(searchResult)
+      setHogangnonoLoading(true)
+      getHogangnonoPrice(query.trim(), complexHint)
+        .then(setHogangnonoResult)
+        .catch(() => setHogangnonoResult(null))
+        .finally(() => setHogangnonoLoading(false))
 
       const analysisResult = await getPropertyAnalysis(property.id)
       setAnalysis(analysisResult)
+      setRegistryResult(null)
+      refreshRecent()
     } catch (err) {
       setError(err instanceof ApiError ? err.message : '분석 중 알 수 없는 오류가 발생했습니다.')
     } finally {
@@ -86,92 +138,198 @@ export function CollateralSearchView() {
     }
   }
 
-  const isComparableType = COMPARABLE_SALE_TYPES.has(assetType)
+  async function handleSelectRecent(propertyId: number) {
+    const item = recentItems.find((i) => i.property_id === propertyId)
+    if (!item) return
+    setLoading(true)
+    setError(null)
+    setAnalysis(null)
+    setMolitResult(null)
+    setHogangnonoResult(null)
+    try {
+      await loadMarketAndAnalysis(propertyId, item.address)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : '물건 정보를 불러오지 못했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleRegistryUpload(file: File) {
+    if (!analysis) return
+    setRegistryLoading(true)
+    setRegistryError(null)
+    try {
+      const result = await analyzeRegistry(file, analysis.property.id)
+      setRegistryResult(result)
+    } catch (err) {
+      setRegistryError(err instanceof ApiError ? err.message : '등기부등본 분석 중 알 수 없는 오류가 발생했습니다.')
+    } finally {
+      setRegistryLoading(false)
+    }
+  }
+
+  const isComparableType = analysis ? COMPARABLE_SALE_TYPES.has(analysis.property.property_type) : true
 
   return (
-    <div className="search-view">
-      <form className="card" onSubmit={handleSubmit}>
-        <h2>담보 물건 검색 및 시세·등급 추정</h2>
-        <p className="hint">주소 또는 아파트 단지명을 입력하면 자동완성 후보가 표시됩니다.</p>
+    <div className="workspace">
+      <Sidebar
+        query={query}
+        onQueryChange={setQuery}
+        onSelectSuggestion={handleSelectSuggestion}
+        assetType={assetType}
+        onAssetTypeChange={setAssetType}
+        exclusiveArea={exclusiveArea}
+        onExclusiveAreaChange={setExclusiveArea}
+        floor={floor}
+        onFloorChange={setFloor}
+        buildYear={buildYear}
+        onBuildYearChange={setBuildYear}
+        onSubmit={handleSubmit}
+        loading={loading}
+        recentItems={recentItems}
+        activePropertyId={analysis?.property.id ?? null}
+        onSelectRecent={handleSelectRecent}
+      />
 
-        <div className="search-form-row">
-          <AutocompleteSearchBox
-            value={query}
-            onChange={setQuery}
-            onSelect={handleSelectSuggestion}
-            placeholder="예: 래미안대치팰리스 또는 서울 강남구 대치동 943"
-          />
-        </div>
+      <main className="workspace-main">
+        {error && <div className="error-banner">⚠ {error}</div>}
 
-        <div className="collateral-form-grid">
-          <label>
-            자산유형
-            <select value={assetType} onChange={(e) => setAssetType(e.target.value)}>
-              {ASSET_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            전용면적(㎡)
-            <input type="number" step="0.01" value={exclusiveArea} onChange={(e) => setExclusiveArea(e.target.value)} required />
-          </label>
-          <label>
-            층
-            <input type="number" value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="선택" />
-          </label>
-          <label>
-            준공연도
-            <input type="number" value={buildYear} onChange={(e) => setBuildYear(e.target.value)} placeholder="선택" />
-          </label>
-        </div>
+        {loading && (
+          <>
+            <SkeletonCard hero lines={2} />
+            <SkeletonCard lines={4} />
+          </>
+        )}
 
-        <div className="opinion-actions">
-          <button type="submit" disabled={loading}>
-            {loading ? '분석 중...' : '종합분석 조회'}
-          </button>
-        </div>
-      </form>
+        {!loading && !analysis && !error && (
+          <div className="workspace-empty">
+            <p className="workspace-empty-title">물건을 검색해주세요</p>
+            <p>좌측에서 주소 또는 단지명을 입력하면 시세·리스크 종합분석을 시작합니다.</p>
+          </div>
+        )}
 
-      {error && <div className="error-banner">⚠ {error}</div>}
+        {!loading && analysis && (
+          <>
+            <SummaryHero
+              valuation={analysis.valuation}
+              costIncome={analysis.cost_income_estimate}
+              molit={molitResult}
+              regionalTrend={analysis.regional_trend}
+              hogangnono={hogangnonoResult}
+              risk={analysis.risk}
+              transactions={molitResult?.sale.transactions ?? []}
+            />
 
-      {loading && (
-        <>
-          <SkeletonCard lines={4} />
-          <SkeletonCard lines={3} />
-          <SkeletonCard lines={3} />
-          <SkeletonCard hero lines={2} />
-          <SkeletonCard lines={5} />
-        </>
-      )}
+            <DetailTabs
+              tabs={[
+                {
+                  id: 'valuation',
+                  label: '시세근거',
+                  content: (
+                    <>
+                      {isComparableType ? (
+                        molitResult && <MolitTransactionCard result={molitResult} />
+                      ) : (
+                        analysis.cost_income_estimate && <CostIncomeCard estimate={analysis.cost_income_estimate} />
+                      )}
+                      {(hogangnonoLoading || hogangnonoResult) && (
+                        <HogangnonoCard result={hogangnonoResult} loading={hogangnonoLoading} />
+                      )}
+                      {analysis.listing_comparison && <ListingComparisonCard comparison={analysis.listing_comparison} />}
+                      {analysis.land_valuation && <LandValuationCard valuation={analysis.land_valuation} />}
+                      {analysis.regional_trend && <RegionalTrendCard trend={analysis.regional_trend} />}
+                      <KbStatsCard sido={analysis.property.sido} />
+                    </>
+                  ),
+                },
+                {
+                  id: 'risk',
+                  label: '리스크상세',
+                  content: <RiskCard risk={analysis.risk} />,
+                },
+                {
+                  id: 'registry',
+                  label: '권리분석',
+                  content: (
+                    <section className="card">
+                      <h2>등기부등본 업로드</h2>
+                      <p className="hint">PDF 또는 PNG/JPG 파일을 업로드하면 이 물건에 연결해 권리관계를 분석합니다.</p>
+                      <input
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        disabled={registryLoading}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) handleRegistryUpload(file)
+                        }}
+                      />
+                      {registryLoading && <p className="hint" style={{ marginTop: 10 }}>분석 중입니다...</p>}
+                      {registryError && (
+                        <div className="error-banner" style={{ marginTop: 10 }}>
+                          ⚠ {registryError}
+                        </div>
+                      )}
+                      {registryResult && (
+                        <div style={{ marginTop: 16 }}>
+                          <p className="registry-summary">{registryResult.summary}</p>
+                          <ul className="risk-flag-list">
+                            {registryResult.risk_flags.map((flag) => (
+                              <li key={flag}>{flag}</li>
+                            ))}
+                          </ul>
+                          {registryResult.rights.length > 0 && (
+                            <div className="table-scroll">
+                              <table>
+                                <thead>
+                                  <tr>
+                                    <th>구분</th>
+                                    <th>권리유형</th>
+                                    <th>권리자</th>
+                                    <th>금액</th>
+                                    <th>등기일</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {registryResult.rights.map((r, i) => (
+                                    <tr key={i}>
+                                      <td>{r.section}</td>
+                                      <td>{r.right_type}</td>
+                                      <td>{r.holder ?? '-'}</td>
+                                      <td>{r.amount != null ? `${r.amount.toLocaleString('ko-KR')}만원` : '-'}</td>
+                                      <td>{r.registered_date ?? '-'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                          <p className="disclaimer" style={{ marginTop: 12 }}>
+                            ⚠ {registryResult.disclaimer}
+                          </p>
+                        </div>
+                      )}
+                    </section>
+                  ),
+                },
+                {
+                  id: 'appraisal',
+                  label: '유사사례',
+                  content: <AppraisalCard appraisal={analysis.appraisal} />,
+                },
+              ]}
+            />
 
-      {!loading && analysis && (
-        <>
-          <div className="ai-draft-banner">🤖 AI 참고 분석 결과 — 심사역 검토 전 초안입니다.</div>
-
-          {isComparableType ? (
-            molitResult && <MolitTransactionCard result={molitResult} />
-          ) : (
-            analysis.cost_income_estimate && <CostIncomeCard estimate={analysis.cost_income_estimate} />
-          )}
-
-          {(hogangnonoLoading || hogangnonoResult) && <HogangnonoCard result={hogangnonoResult} loading={hogangnonoLoading} />}
-
-          {analysis.regional_trend && <RegionalTrendCard trend={analysis.regional_trend} />}
-
-          <HeadlineEstimateCard
-            valuation={analysis.valuation}
-            costIncome={analysis.cost_income_estimate}
-            molit={molitResult}
-            regionalTrend={analysis.regional_trend}
-            hogangnono={hogangnonoResult}
-          />
-
-          <RiskCard risk={analysis.risk} />
-        </>
-      )}
+            {opinion.error && <div className="error-banner">⚠ {opinion.error}</div>}
+            <OpinionSection
+              opinion={opinion.opinion}
+              loading={opinion.loading}
+              onGenerate={opinion.generate}
+              onSave={opinion.save}
+            />
+          </>
+        )}
+      </main>
     </div>
   )
 }

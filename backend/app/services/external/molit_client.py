@@ -2,7 +2,9 @@
 
 - 아파트 매매: https://www.data.go.kr/data/15057511/openapi.do
 - 아파트 전월세: https://www.data.go.kr/data/15058017/openapi.do
-같은 서비스키로 두 자료 모두 조회 가능하다.
+- 토지 매매: https://www.data.go.kr/data/15057267/openapi.do
+같은 서비스키(MOLIT_SERVICE_KEY)로 세 자료 모두 조회 가능하다 (RTMSDataSvc 계열은 공공데이터포털에서
+"부동산 거래가격 정보" 묶음으로 함께 활용신청되는 경우가 많다).
 """
 
 import xml.etree.ElementTree as ET
@@ -14,6 +16,7 @@ from app.core.config import settings
 
 TRADE_BASE_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev"
 RENT_BASE_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent"
+LAND_TRADE_BASE_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade"
 
 
 class MolitApiError(Exception):
@@ -64,3 +67,8 @@ def fetch_apt_trade_rows(lawd_cd: str, deal_ymd: str) -> list[dict[str, str]]:
 def fetch_apt_rent_rows(lawd_cd: str, deal_ymd: str) -> list[dict[str, str]]:
     """아파트 전월세 실거래가 자료."""
     return _fetch_rows(RENT_BASE_URL, lawd_cd, deal_ymd)
+
+
+def fetch_land_trade_rows(lawd_cd: str, deal_ymd: str) -> list[dict[str, str]]:
+    """토지 매매 실거래가 자료."""
+    return _fetch_rows(LAND_TRADE_BASE_URL, lawd_cd, deal_ymd)

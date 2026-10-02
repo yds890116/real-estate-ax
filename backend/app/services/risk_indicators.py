@@ -166,6 +166,16 @@ def mortgage_ratio(mortgage_total: int | None, estimated_price: int | None) -> I
     return f"근저당 합계 {mortgage_total:,}만원 / AI 추정시세 {ratio_pct:.0f}%", score, "rule"
 
 
+def land_value(land_valuation_score: float | None) -> IndicatorResult:
+    """토지가치평가점수(개발잠재력·입지가치 종합, 0~100, 높을수록 양호)를 리스크 점수로 역산."""
+
+    if land_valuation_score is None:
+        return "토지가치평가 데이터 없음으로 중립값 적용", 40.0, "rule"
+
+    risk_score = max(0.0, min(100.0, 100 - land_valuation_score))
+    return f"토지가치평가점수 {land_valuation_score:.0f}점(개발잠재력·입지가치 종합)", risk_score, "rule"
+
+
 # ── 5. 정책리스크 ──────────────────────────────────────────────────────────
 
 

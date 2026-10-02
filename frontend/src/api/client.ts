@@ -9,6 +9,7 @@ import type {
   DailyItemsResponse,
   DashboardItem,
   HogangnonoComplexResult,
+  KbPriceTrendResponse,
   ListingScrapeResponse,
   MarketSearchResult,
   MarketTransaction,
@@ -189,6 +190,11 @@ export function getCourtAuctionDailyItems(targetDate?: string): Promise<CourtAuc
 
 export function collectCourtAuctionNow(): Promise<CollectionRunResult> {
   return request<CollectionRunResult>('/court-auction-monitor/collect', { method: 'POST' })
+}
+
+export function getKbPriceTrend(sido: string, months = 24): Promise<KbPriceTrendResponse> {
+  const search = new URLSearchParams({ sido, months: String(months) })
+  return request<KbPriceTrendResponse>(`/kb-stats/trend?${search.toString()}`)
 }
 
 export { ApiError }

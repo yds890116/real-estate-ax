@@ -1,6 +1,7 @@
 import type { RiskScoreResult } from '../types'
-import { gradeColorClass, tierColorClass } from '../utils/risk'
+import { tierColorClass } from '../utils/risk'
 import { RiskCategoryChart } from './RiskCategoryChart'
+import { RiskGauge } from './RiskGauge'
 
 export function RiskCard({ risk }: { risk: RiskScoreResult }) {
   return (
@@ -11,11 +12,8 @@ export function RiskCard({ risk }: { risk: RiskScoreResult }) {
       </div>
 
       <div className="risk-grade-row">
-        <span className={`risk-grade-badge ${gradeColorClass(risk.risk_grade)}`}>{risk.risk_grade}</span>
-        <div>
-          <p className="risk-level-label">{risk.risk_level_label}</p>
-          <p className="risk-score">종합점수 {risk.score} / 100</p>
-        </div>
+        <RiskGauge score={risk.score} grade={risk.risk_grade} gradeLabel={risk.risk_level_label} size={140} />
+        <p className="risk-score">종합점수 {risk.score} / 100</p>
       </div>
 
       <p className="opinion-label">카테고리별 기여도</p>

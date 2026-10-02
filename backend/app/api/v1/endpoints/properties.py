@@ -11,6 +11,7 @@ from app.schemas.opinion import OpinionUpdateRequest, ReviewOpinionResult
 from app.schemas.registry import RegistryAnalysisResult
 from app.services.appraisal_search import search_similar_cases
 from app.services.cost_income_valuation import estimate_cost_income
+from app.services.land_valuation_service import get_land_valuation
 from app.services.listing_comparison import compare_to_market
 from app.services.listing_service import get_cached_or_sample_listings
 from app.services.opinion_service import OpinionNotFoundError, generate_opinion, get_opinion, update_opinion
@@ -80,7 +81,8 @@ def get_property_analysis(property_id: int, db: Session = Depends(get_db)):
         registry.mortgage_total = mortgage_total
         registry.estimated_price = valuation.estimated_price
 
-    risk = risk_engine.score(prop, valuation, db, mortgage_total)
+    land_valuation = get_land_valuation(db, prop)
+    risk = risk_engine.score(prop, valuation, db, mortgage_total, land_valuation.land_valuation_score)
 
     appraisal = search_similar_cases(db, prop, usage=prop.property_type)
 
@@ -111,6 +113,7 @@ def get_property_analysis(property_id: int, db: Session = Depends(get_db)):
         regional_trend=regional_trend,
         cost_income_estimate=cost_income_estimate,
         listing_comparison=listing_comparison,
+        land_valuation=land_valuation,
     )
 
 

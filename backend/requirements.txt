@@ -22,3 +22,8 @@ playwright>=1.48
 
 # 일일 데이터 수집 배치 스케줄링 (온비드 공매/네이버 뉴스)
 apscheduler>=3.10
+
+# KB부동산 데이터허브 주택가격동향조사(매매/전세/월세 가격지수) 연동
+PublicDataReader>=1.1.1
+xmltodict>=0.14
+beautifulsoup4>=4.13
